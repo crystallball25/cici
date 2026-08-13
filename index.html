@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초등학교 3학년 2학기 사회 퀴즈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            background-color: #f0fdf4;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .correct-anim {
+            animation: pop 0.3s ease-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full fade-in">
+        <!-- 시작 화면 -->
+        <div id="start-screen" class="text-center">
+            <h1 class="text-4xl font-bold text-green-600 mb-4">🏫 초등 3학년 2학기 사회 퀴즈</h1>
+            <p class="text-lg text-gray-600 mb-8">
+                1단원부터 3단원까지 우리가 배운 내용을 퀴즈로 재미있게 복습해 볼까요?
+                <br>모두 6문제가 준비되어 있어요. 화이팅! 📝
+            </p>
+            <button onclick="startQuiz()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full text-xl transition transform hover:scale-105 shadow-lg">
+                퀴즈 시작하기 🚀
+            </button>
+        </div>
+
+        <!-- 퀴즈 화면 -->
+        <div id="quiz-screen" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <span id="unit-badge" class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">1단원</span>
+                <span class="text-gray-500 font-bold">문제 <span id="current-q-num">1</span> / <span id="total-q-num">6</span></span>
+            </div>
+            
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full" style="width: 16.6%"></div>
+            </div>
+
+            <h2 id="question-text" class="text-2xl font-bold text-gray-800 mb-6 leading-tight">질문 내용이 여기에 들어갑니다.</h2>
+
+            <div id="options-container" class="grid grid-cols-1 gap-4 mb-6">
+                <!-- 보기 버튼들이 여기에 동적으로 생성됩니다. -->
+            </div>
+
+            <div id="feedback-container" class="hidden p-4 rounded-lg mb-6 fade-in">
+                <p id="feedback-message" class="font-bold text-lg mb-2"></p>
+                <p id="explanation" class="text-gray-700"></p>
+            </div>
+
+            <div class="text-right hidden" id="next-btn-container">
+                <button onclick="nextQuestion()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition shadow">
+                    다음 문제 👉
+                </button>
+            </div>
+        </div>
+
+        <!-- 결과 화면 -->
+        <div id="result-screen" class="hidden text-center fade-in">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">🎉 퀴즈 완료!</h2>
+            <div class="text-6xl mb-4" id="result-emoji">🏆</div>
+            <p class="text-2xl font-bold text-gray-700 mb-2">
+                총 <span id="final-score" class="text-green-600 text-3xl">0</span> 문제를 맞혔어요!
+            </p>
+            <p id="result-message" class="text-lg text-gray-600 mb-8">참 잘했어요!</p>
+            
+            <button onclick="resetQuiz()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg transition transform hover:scale-105 shadow-lg">
+                다시 풀어보기 🔄
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                unit: "1단원. 환경에 따라 다른 삶의 모습",
+                question: "다음 중 사람의 힘을 빌리지 않고 자연 그대로인 '자연환경'에 해당하는 것은 무엇인가요?",
+                options: ["자동차가 다니는 도로", "물건을 만드는 공장", "파도가 치는 바다", "우리가 사는 아파트"],
+                answer: 2,
+                explanation: "바다, 산, 들, 하천 등은 사람의 힘을 빌리지 않은 자연 그대로의 모습인 '자연환경'입니다. 도로, 공장, 아파트는 사람들이 만든 '인문환경'입니다."
+            },
+            {
+                unit: "1단원. 환경에 따라 다른 삶의 모습",
+                question: "계절에 따른 사람들의 생활 모습으로 알맞지 않은 것은 무엇인가요?",
+                options: [
+                    "봄에는 따뜻해져서 꽃구경을 갑니다.", 
+                    "여름에는 더위를 피하기 위해 두꺼운 솜옷을 입습니다.", 
+                    "가을에는 농작물을 수확(추수)합니다.", 
+                    "겨울에는 난방 기구를 사용하고 눈싸움을 합니다."
+                ],
+                answer: 1,
+                explanation: "여름에는 날씨가 매우 덥기 때문에 바람이 잘 통하고 얇은 옷을 입습니다. 두꺼운 솜옷은 추운 겨울에 입습니다."
+            },
+            {
+                unit: "2단원. 시대마다 다른 삶의 모습",
+                question: "과거에 곡식을 가루로 만들 때 사용했던 도구인 '맷돌'은 오늘날 어떤 도구로 발전하였나요?",
+                options: ["전기밥솥", "전자레인지", "믹서", "김치냉장고"],
+                answer: 2,
+                explanation: "옛날에 손으로 돌려서 곡식을 가루로 만들던 맷돌은, 오늘날 전기의 힘으로 재료를 쉽고 빠르게 갈아주는 '믹서'로 발전하였습니다."
+            },
+            {
+                unit: "2단원. 시대마다 다른 삶의 모습",
+                question: "음력 1월 15일로, 오곡밥을 먹고 부럼 깨기를 하며 한 해의 건강을 기원하는 명절(세시 풍속)은 무엇인가요?",
+                options: ["설날", "추석", "단오", "정월 대보름"],
+                answer: 3,
+                explanation: "정월 대보름에는 오곡밥을 먹고, 부럼 깨기, 쥐불놀이 등의 세시 풍속을 즐기며 한 해의 농사가 잘 되고 건강하기를 기원했습니다."
+            },
+            {
+                unit: "3단원. 가족의 모습과 역할 변화",
+                question: "오늘날 가족의 모습에 대한 설명으로 가장 알맞은 것은 무엇인가요?",
+                options: [
+                    "가족의 형태가 점점 한 가지로 똑같아지고 있습니다.", 
+                    "할아버지, 할머니와 함께 사는 대가족이 대부분입니다.", 
+                    "1인 가족, 다문화 가족, 한부모 가족 등 가족의 형태가 매우 다양합니다.", 
+                    "농사를 짓기 위해 많은 가족 구성원이 함께 모여 삽니다."
+                ],
+                answer: 2,
+                explanation: "과거에는 주로 농사를 짓기 위해 대가족이 모여 살았지만, 오늘날에는 핵가족, 1인 가족, 다문화 가족 등 다양한 형태의 가족이 각자의 모습으로 살아가고 있습니다."
+            },
+            {
+                unit: "3단원. 가족의 모습과 역할 변화",
+                question: "오늘날 바람직한 가족 구성원의 역할로 올바른 것은 무엇인가요?",
+                options: [
+                    "집안일은 무조건 어머니 혼자서 다 해야 합니다.", 
+                    "가족 구성원들이 서로 배려하며 역할을 나누어 집안일을 돕습니다.", 
+                    "아이들은 집안일에 절대 참여하면 안 됩니다.", 
+                    "남자와 여자가 해야 할 일이 엄격하게 정해져 있습니다."
+                ],
+                answer: 1,
+                explanation: "오늘날에는 성별이나 나이에 관계없이 가족 구성원이 서로를 배려하고, 각자 할 수 있는 집안일을 나누어서 함께 하는 것이 바람직합니다."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const unitBadge = document.getElementById('unit-badge');
+        const currentQNum = document.getElementById('current-q-num');
+        const totalQNum = document.getElementById('total-q-num');
+        const progressBar = document.getElementById('progress-bar');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const explanationText = document.getElementById('explanation');
+        const nextBtnContainer = document.getElementById('next-btn-container');
+
+        document.getElementById('total-q-num').innerText = quizData.length;
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            hasAnswered = false;
+            feedbackContainer.classList.add('hidden');
+            nextBtnContainer.classList.add('hidden');
+            
+            const currentQuiz = quizData[currentQuestionIndex];
+            
+            // 상태 업데이트
+            unitBadge.innerText = currentQuiz.unit;
+            currentQNum.innerText = currentQuestionIndex + 1;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+            
+            // 문제 텍스트 설정
+            questionText.innerText = currentQuiz.question;
+            
+            // 보기 생성
+            optionsContainer.innerHTML = '';
+            currentQuiz.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-green-400 hover:bg-green-50 transition duration-200 text-lg text-gray-700 bg-white shadow-sm';
+                button.innerText = `${index + 1}. ${option}`;
+                button.onclick = () => selectAnswer(index, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedIndex, selectedButton) {
+            if (hasAnswered) return; // 이미 답을 골랐으면 무시
+            hasAnswered = true;
+
+            const currentQuiz = quizData[currentQuestionIndex];
+            const isCorrect = selectedIndex === currentQuiz.answer;
+            const allButtons = optionsContainer.querySelectorAll('button');
+
+            // 버튼 스타일 업데이트
+            allButtons.forEach((btn, index) => {
+                btn.disabled = true; // 버튼 비활성화
+                btn.classList.remove('hover:border-green-400', 'hover:bg-green-50');
+                
+                if (index === currentQuiz.answer) {
+                    // 정답 표시
+                    btn.classList.add('border-green-500', 'bg-green-100', 'text-green-800', 'font-bold');
+                } else if (index === selectedIndex && !isCorrect) {
+                    // 오답 표시
+                    btn.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
+                } else {
+                    // 나머지 흐리게
+                    btn.classList.add('opacity-50');
+                }
+            });
+
+            // 피드백 영역 표시
+            feedbackContainer.classList.remove('hidden');
+            feedbackContainer.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+            
+            if (isCorrect) {
+                score++;
+                selectedButton.classList.add('correct-anim');
+                feedbackContainer.classList.add('bg-green-100');
+                feedbackMessage.className = 'font-bold text-xl mb-2 text-green-700';
+                feedbackMessage.innerText = '⭕ 정답입니다! 최고예요!';
+                explanationText.className = 'text-green-800';
+            } else {
+                feedbackContainer.classList.add('bg-red-100');
+                feedbackMessage.className = 'font-bold text-xl mb-2 text-red-700';
+                feedbackMessage.innerText = '❌ 아쉬워요! 다시 한번 기억해 볼까요?';
+                explanationText.className = 'text-red-800';
+            }
+            
+            explanationText.innerText = currentQuiz.explanation;
+
+            // 다음 문제 버튼 표시
+            nextBtnContainer.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = score;
+            
+            const resultMsg = document.getElementById('result-message');
+            const resultEmoji = document.getElementById('result-emoji');
+            
+            if (score === quizData.length) {
+                resultMsg.innerText = "완벽해요! 3학년 2학기 사회 내용을 모두 잘 이해하고 있군요!";
+                resultEmoji.innerText = "🌟🏆🌟";
+            } else if (score >= 4) {
+                resultMsg.innerText = "정말 잘했어요! 헷갈렸던 부분만 한 번 더 읽어보면 완벽할 거예요!";
+                resultEmoji.innerText = "👏😊";
+            } else {
+                resultMsg.innerText = "괜찮아요! 교과서를 다시 한번 천천히 읽어보고 퀴즈에 다시 도전해 보세요!";
+                resultEmoji.innerText = "💪📚";
+            }
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
+```eof
+
+**생성된 파일:**
+* `초3-2학기-사회-퀴즈.html`: 1단원(환경과 생활), 2단원(시대와 생활, 세시풍속), 3단원(가족의 형태와 역할)의 주요 핵심 개념들을 종합하여 만든 대화형 웹 퀴즈 코드입니다. 
+
+학생들이 직접 문제를 풀면서 자연스럽게 오답과 정답의 이유(해설)를 읽어볼 수 있도록 구성했습니다. 해당 코드를 `.html` 파일로 저장하신 후 크롬, 엣지 등의 웹 브라우저에서 열면 바로 퀴즈를 진행해 볼 수 있습니다. 
+
+퀴즈를 통해 즐겁게 사회 과목을 복습하길 바랍니다! 언제든 더 필요한 내용이 있다면 말씀해 주세요.
